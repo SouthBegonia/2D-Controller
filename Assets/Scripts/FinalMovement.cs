@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class FinalMovement : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private float rbGravitySet;     // 初始GravityScale值
     private Collider2D coll;
     private Animator anim;
 
@@ -17,11 +18,11 @@ public class FinalMovement : MonoBehaviour
     public LayerMask ground;
 
     [Header("Dash参数")]
-    public float dashTime;      //dash时长
-    private float dashTimeLeft; //dash剩余时长
-    private float lastDash = -10f;     //上一次dash时间点
-    public float dashCD;        //dash CD
-    public float dashSpeed;     //dash 速度
+    public float dashTime;          // Dash时长
+    private float dashTimeLeft;     // Dash剩余时长
+    private float lastDash = -10f;  // 上一次Dash时间点
+    public float dashCD;            // Dash CD
+    public float dashSpeed;         // Dash 速度
 
 
     [Header("Player是否处于某状态中")]
@@ -33,7 +34,7 @@ public class FinalMovement : MonoBehaviour
     int jumpCount;
 
     [Header("UI")]
-    public Image CDImage;
+    public Image CDImage;           // Dash冷却UI
 
 
     void Start()
@@ -41,6 +42,7 @@ public class FinalMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<Collider2D>();
         anim = GetComponent<Animator>();
+        rbGravitySet = rb.gravityScale;
     }
 
     void Update()
@@ -51,10 +53,10 @@ public class FinalMovement : MonoBehaviour
             jumpPressed = true;
         }
 
-        // Dash
-        if(Input.GetKeyDown(KeyCode.J))
+        // Dash：移动中才可dash
+        if (Input.GetKeyDown(KeyCode.J) && horizontalMove!=0)
         {
-            if(Time.time>=(lastDash+dashCD))
+            if (Time.time >= (lastDash + dashCD))
             {
                 ReadyToDash();
             }
@@ -143,26 +145,33 @@ public class FinalMovement : MonoBehaviour
     /// </summary>
     private void Dash()
     {
-        if(isDashing)
+        if (isDashing)
         {
-            if(dashTimeLeft>0)
+            if (dashTimeLeft > 0)
             {
-                // 起跳时dash
-                if(rb.velocity.y>0 && !isGround)
+                // 起跳时dash：期间忽略重力因素，进行平移dash
+                // Dash方向完全取决于Input移动的方向，若没有移动输入，则无法dashs
+                if (!isGround)
                 {
-                    rb.velocity = new Vector2(dashSpeed * horizontalMove, jumpForce);
+                    rb.velocity = new Vector2(dashSpeed * horizontalMove, 0);
+                    rb.gravityScale = 0f;
                 }
-
-                rb.velocity = new Vector2(dashSpeed * horizontalMove, rb.velocity.y);
+                else
+                {
+                    // 平地时dash
+                    rb.velocity = new Vector2(dashSpeed * horizontalMove, rb.velocity.y);
+                }
 
                 dashTimeLeft -= Time.deltaTime;
 
+                // 从对象池取得残影
                 ShadowPool.instance.GetFromPool();
             }
             else
             {
                 // dash完
                 isDashing = false;
+                rb.gravityScale = rbGravitySet;
                 if (!isGround)
                 {
                     //rb.velocity = new Vector2(dashSpeed * horizontalMove, jumpForce);
