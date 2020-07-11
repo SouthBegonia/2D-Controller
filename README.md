@@ -1,6 +1,6 @@
 2D 冲锋残影效果
 
-![https://github.com/SouthBegonia/2D-Controller/blob/master/20200701_161517.gif]()
+![](https://gitee.com/southbegonia/BlogImage/blob/master/2020/20200711130119.gif)
 
 # 前言
 
